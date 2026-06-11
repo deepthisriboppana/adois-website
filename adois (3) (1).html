@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADOIS — Adaptive Disaster Operations Intelligence System</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080f;
+    --surface: rgba(8,16,32,0.85);
+    --border: rgba(0,180,255,0.18);
+    --accent: #00b4ff;
+    --accent2: #ff6a00;
+    --amber: #ffb300;
+    --green: #00e5a0;
+    --text: #e2eaf5;
+    --muted: #5a7090;
+    --danger: #ff3d3d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── ANIMATED BACKGROUND ── */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,180,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,180,255,0.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridScroll 20s linear infinite;
+  }
+
+  @keyframes gridScroll {
+    from { background-position: 0 0; }
+    to   { background-position: 60px 60px; }
+  }
+
+  .bg-glow1 {
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,100,255,0.15) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    animation: pulse1 6s ease-in-out infinite alternate;
+  }
+  .bg-glow2 {
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,100,0,0.12) 0%, transparent 70%);
+    bottom: -100px; right: 10%;
+    animation: pulse2 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse1 { from { opacity: 0.5; transform: scale(1); } to { opacity: 1; transform: scale(1.1); } }
+  @keyframes pulse2 { from { opacity: 0.3; transform: scale(1.1); } to { opacity: 0.8; transform: scale(1); } }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,180,255,0.4), transparent);
+    animation: scan 8s linear infinite;
+  }
+  @keyframes scan { from { top: -2px; } to { top: 100%; } }
+
+  /* ── NAV ── */
+  nav {
+    position: relative; z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,8,15,0.7);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 42px; height: 42px;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--accent);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,180,255,0.2), transparent);
+  }
+
+  .logo-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+  }
+
+  .logo-sub {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: -2px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.2s;
+  }
+  .nav-links a:hover::after { transform: scaleX(1); }
+
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 5;
+    min-height: calc(100vh - 82px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: center;
+  }
+
+  /* LEFT: headline */
+  .hero-left {
+    padding: 80px 60px 80px 80px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .alert-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,107,0,0.12);
+    border: 1px solid rgba(255,107,0,0.35);
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    margin-bottom: 28px;
+  }
+
+  .alert-tag .pulse {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    box-shadow: 0 0 6px var(--accent2);
+    animation: blink 1s infinite;
+  }
+
+  h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 24px;
+  }
+
+  h1 .line1 { color: var(--text); display: block; }
+  h1 .line2 { color: var(--accent); display: block; }
+  h1 .line3 { color: var(--text); display: block; }
+
+  .hero-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 460px;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 44px;
+  }
+
+  .stat {
+    border-left: 2px solid var(--accent);
+    padding-left: 14px;
+  }
+
+  .stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  }
+
+  .btn-primary:hover {
+    background: #fff;
+    box-shadow: 0 0 30px rgba(0,180,255,0.5);
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 13px 28px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  /* ── RIGHT: Login panels ── */
+  .hero-right {
+    padding: 60px 80px 60px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .login-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px 24px 24px;
+    backdrop-filter: blur(16px);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-btn {
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .panel.user::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .panel.user { border-top-color: rgba(0,180,255,0.4); }
+  .panel.user:hover { border-color: rgba(0,180,255,0.45); }
+
+  .panel.admin::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .panel.admin { border-top-color: rgba(255,106,0,0.4); }
+  .panel.admin:hover { border-color: rgba(255,106,0,0.45); }
+
+  .panel-corner {
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+  }
+
+  .panel.user .panel-corner {
+    border-width: 0 28px 28px 0;
+    border-color: transparent rgba(0,180,255,0.3) transparent transparent;
+  }
+
+  .panel.admin .panel-corner {
+    border-width: 0 28px 28px 0;
+    border-color: transparent rgba(255,106,0,0.3) transparent transparent;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .panel-icon {
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .panel.user .panel-icon { background: rgba(0,180,255,0.1); border: 1px solid rgba(0,180,255,0.25); }
+  .panel.admin .panel-icon { background: rgba(255,106,0,0.1); border: 1px solid rgba(255,106,0,0.25); }
+
+  .panel-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .panel.user .panel-title { color: var(--accent); }
+  .panel.admin .panel-title { color: var(--accent2); }
+
+  .panel-role {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 9px 12px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .panel.user .field input:focus { border-color: rgba(0,180,255,0.5); }
+  .panel.admin .field input:focus { border-color: rgba(255,106,0,0.5); }
+
+  .field input::placeholder { color: var(--muted); }
+
+  .panel:hover {
+    transform: translateY(-4px);
+  }
+
+  .panel.user .panel-btn {
+    background: var(--accent);
+    color: #000;
+  }
+  .panel.user .panel-btn:hover {
+    background: #fff;
+    box-shadow: 0 0 20px rgba(0,180,255,0.4);
+  }
+
+  .panel.admin .panel-btn {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .panel.admin .panel-btn:hover {
+    background: #ffaa55;
+    box-shadow: 0 0 20px rgba(255,106,0,0.4);
+  }
+
+  .panel-link {
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .panel-link a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .panel.user .panel-link a:hover { color: var(--accent); }
+  .panel.admin .panel-link a:hover { color: var(--accent2); }
+
+  /* ── FEATURES BAR ── */
+  .features-bar {
+    position: relative; z-index: 5;
+    border-top: 1px solid var(--border);
+    background: rgba(5,8,15,0.9);
+    backdrop-filter: blur(12px);
+    padding: 24px 80px;
+    display: flex;
+    gap: 0;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    border-left: 1px solid var(--border);
+    flex: 1;
+  }
+
+  .feature-item:first-child { border-left: none; padding-left: 0; }
+
+  .feature-ico {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .feature-text .ft {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .feature-text .fd {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* scrolling ticker */
+  .ticker {
+    position: relative; z-index: 5;
+    background: rgba(0,180,255,0.07);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 30s linear infinite;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(100vw); }
+    to   { transform: translateX(-100%); }
+  }
+
+  .ticker-item {
+    display: inline-block;
+    margin-right: 60px;
+    color: var(--muted);
+  }
+
+  .ticker-item .label {
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  .ticker-item .critical { color: var(--danger); }
+  .ticker-item .active { color: var(--green); }
+  .ticker-item .warning { color: var(--amber); }
+
+  /* hud elements on hero-left */
+  .hud-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .article-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s, border-color 0.2s;
+    backdrop-filter: blur(12px);
+  }
+  .article-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0,180,255,0.35);
+  }
+  .article-tag {
+    display: inline-block;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+    width: fit-content;
+  }
+  .critical-tag { background: rgba(255,61,61,0.12); color: var(--danger); border: 1px solid rgba(255,61,61,0.25); }
+  .warning-tag  { background: rgba(255,179,0,0.12); color: var(--amber); border: 1px solid rgba(255,179,0,0.25); }
+  .danger-tag   { background: rgba(0,180,255,0.12); color: var(--accent); border: 1px solid rgba(0,180,255,0.25); }
+  .green-tag    { background: rgba(0,229,160,0.12); color: var(--green); border: 1px solid rgba(0,229,160,0.25); }
+  .article-img  { font-size: 2rem; }
+  .article-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    letter-spacing: 0.03em;
+  }
+  .article-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.75;
+    flex: 1;
+  }
+  .article-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 4px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-layer">
+  <div class="bg-grid"></div>
+  <div class="bg-glow1"></div>
+  <div class="bg-glow2"></div>
+  <div class="scan-line"></div>
+</div>
+
+<!-- Ticker -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item"><span class="label">ALERT:</span> <span class="critical">Cyclone DANA — Severity Extreme — Odisha & Andhra Pradesh Coast</span></span>
+
+    <span class="ticker-item"><span class="label">INCIDENT:</span> <span class="warning">Forest Fire — Uttarakhand — Nainital District</span></span>
+    <span class="ticker-item"><span class="label">SYSTEM STATUS:</span> <span class="active">All Systems Operational</span></span>
+
+    <span class="ticker-item"><span class="label">PRIORITY:</span> <span class="active">Real-time coordination</span></span>
+    <span class="ticker-item"><span class="label">COMMS:</span> <span class="active">Encrypted Multi-Agency Network Active</span></span>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">⬡</div>
+    <div>
+      <div class="logo-text">ADOIS</div>
+      <div class="logo-sub">Disaster Operations Intelligence</div>
+    </div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#">Operations</a></li>
+    <li><a href="#">Resources</a></li>
+    <li><a href="#" onclick="toggleArticles(event)">Analytics</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    System Online
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="alert-tag">
+      <div class="pulse"></div>
+      Live Operations Active
+    </div>
+
+    <h1>
+      <span class="line1">Adaptive</span>
+      <span class="line2">Disaster Operations</span>
+      <span class="line3">Intelligence System</span>
+    </h1>
+
+    <p class="hero-desc">
+      We enable seamless real-time coordination during critical situations. Our intelligent systems ensure faster and more effective response. Together, we build safer and more resilient communities.
+    </p>
+  </div>
+
+  <div class="hero-right">
+    <div style="font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">
+      ▸ Secure Access Portal
+    </div>
+    <div class="login-panels">
+
+      <!-- USER PANEL -->
+      <div class="panel user">
+        <div class="panel-corner"></div>
+        <div class="panel-header">
+          <div class="panel-icon">👤</div>
+          <div>
+            <div class="panel-title">User</div>
+            <div class="panel-role">Field / Responder Access</div>
+          </div>
+        </div>
+        <button class="panel-btn" style="margin-top:16px;">Enter Portal</button>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div class="panel admin">
+        <div class="panel-corner"></div>
+        <div class="panel-header">
+          <div class="panel-icon">🛡️</div>
+          <div>
+            <div class="panel-title">Admin</div>
+            <div class="panel-role">Command / Control Access</div>
+          </div>
+        </div>
+        <button class="panel-btn" style="margin-top:16px;">Enter Portal</button>
+      </div>
+
+    </div>
+
+    <!-- Clearance note -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;font-family:'Rajdhani',sans-serif;white-space:nowrap;">
+        🔒 256-bit AES · Encrypted Channels · Clearance Level Required
+      </div>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features bar -->
+<div class="features-bar">
+  <div class="feature-item">
+    <div class="feature-ico">🗺️</div>
+    <div class="feature-text">
+      <div class="ft">Real-Time Mapping</div>
+      <div class="fd">Live incident tracking & zone overlays</div>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-ico">🤖</div>
+    <div class="feature-text">
+      <div class="ft">AI Threat Analysis</div>
+      <div class="fd">Predictive risk scoring & routing</div>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-ico">📡</div>
+    <div class="feature-text">
+      <div class="ft">Multi-Agency Comms</div>
+      <div class="fd">Encrypted inter-agency coordination</div>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-ico">📦</div>
+    <div class="feature-text">
+      <div class="ft">Resource Management</div>
+      <div class="fd">Assets, personnel & logistics tracking</div>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-ico">⚡</div>
+    <div class="feature-text">
+      <div class="ft">Rapid Deployment</div>
+      <div class="fd">Sub-minute response dispatch alerts</div>
+    </div>
+  </div>
+</div>
+
+<!-- Articles Section -->
+<div id="articles-section" style="display:none; position:relative; z-index:5; background:rgba(5,8,15,0.97); border-top:1px solid var(--border); padding: 60px 80px;">
+  <div style="max-width:1100px; margin:0 auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:40px;">
+      <div>
+        <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-family:'Rajdhani',sans-serif;margin-bottom:8px;">▸ Disaster Intelligence</div>
+        <h2 style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);">Natural Disaster <span style="color:var(--accent);">Analytics</span></h2>
+      </div>
+      <button onclick="toggleArticles(event)" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:8px 18px;border-radius:4px;cursor:pointer;">✕ Close</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:20px;">
+
+      <div class="article-card">
+        <div class="article-tag critical-tag">Earthquake</div>
+        <div class="article-img">🌍</div>
+        <h3 class="article-title">Understanding Seismic Activity in the Himalayan Belt</h3>
+        <p class="article-body">The Himalayan region remains one of the world's most seismically active zones. India's tectonic collision with the Eurasian plate continues to generate significant earthquake risk across northern states including Uttarakhand, Himachal Pradesh, and the Northeast.</p>
+        <div class="article-meta" onclick="openArticle(0)">
+          <span>India Geological Survey</span>
+          <span style="color:var(--accent);cursor:pointer;">Read More →</span>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="article-tag warning-tag">Cyclone</div>
+        <div class="article-img">🌀</div>
+        <h3 class="article-title">Bay of Bengal Cyclone Patterns & Coastal Impact</h3>
+        <p class="article-body">Cyclones forming in the Bay of Bengal disproportionately affect India's eastern coastline — particularly Odisha, Andhra Pradesh, and West Bengal. Analysing seasonal trends enables better pre-positioning of relief resources and early evacuation protocols.</p>
+        <div class="article-meta" onclick="openArticle(1)">
+          <span>IMD Research Division</span>
+          <span style="color:var(--accent);cursor:pointer;">Read More →</span>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="article-tag danger-tag">Flood</div>
+        <div class="article-img">🌊</div>
+        <h3 class="article-title">Monsoon Flooding: Assam & Bihar Crisis Preparedness</h3>
+        <p class="article-body">Annual monsoon floods displace millions across Assam and Bihar each year. AI-driven flood prediction models integrated with satellite imagery can now forecast inundation zones up to 72 hours in advance, enabling faster community-level response.</p>
+        <div class="article-meta" onclick="openArticle(2)">
+          <span>NDMA India</span>
+          <span style="color:var(--accent);cursor:pointer;">Read More →</span>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="article-tag warning-tag">Wildfire</div>
+        <div class="article-img">🔥</div>
+        <h3 class="article-title">Forest Fire Risk in Uttarakhand: Causes & Response</h3>
+        <p class="article-body">Rising temperatures and dry spells have intensified forest fire seasons across Uttarakhand and Himachal Pradesh. Remote sensing data combined with ground patrols have improved early detection, reducing containment time by nearly 40% in recent seasons.</p>
+        <div class="article-meta" onclick="openArticle(3)">
+          <span>Forest Survey of India</span>
+          <span style="color:var(--accent);cursor:pointer;">Read More →</span>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="article-tag critical-tag">Tsunami</div>
+        <div class="article-img">🌐</div>
+        <h3 class="article-title">Indian Ocean Tsunami Warning Systems: Current Status</h3>
+        <p class="article-body">Following the 2004 Indian Ocean Tsunami, India established INCOIS — the Indian National Centre for Ocean Information Services — which now provides real-time tsunami alerts within minutes of seismic detection, protecting millions along the coastline.</p>
+        <div class="article-meta" onclick="openArticle(4)">
+          <span>INCOIS</span>
+          <span style="color:var(--accent);cursor:pointer;">Read More →</span>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="article-tag green-tag">Heatwave</div>
+        <div class="article-img">☀️</div>
+        <h3 class="article-title">Heatwave Preparedness: Rajasthan & Vidarbha Region</h3>
+        <p class="article-body">India's heatwave seasons have grown longer and more intense. Heat action plans rolled out in Ahmedabad and other cities have demonstrated that coordinated early-warning systems and cooling centres can significantly reduce heat-related fatalities.</p>
+        <div class="article-meta" onclick="openArticle(5)">
+          <span>MoHFW & State Govts</span>
+          <span style="color:var(--accent);cursor:pointer;">Read More →</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Article Modal -->
+<div id="article-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#0d1220; border:1px solid var(--border); border-radius:12px; max-width:720px; width:100%; max-height:85vh; overflow-y:auto; padding:40px; position:relative;">
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;border-radius:4px;cursor:pointer;">✕ Close</button>
+    <div id="modal-tag" class="article-tag" style="margin-bottom:16px;"></div>
+    <div id="modal-icon" style="font-size:2.5rem;margin-bottom:16px;"></div>
+    <h2 id="modal-title" style="font-family:'Rajdhani',sans-serif;font-size:1.6rem;font-weight:700;letter-spacing:0.04em;color:var(--text);margin-bottom:12px;line-height:1.2;"></h2>
+    <div id="modal-source" style="font-size:11px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;font-family:'Rajdhani',sans-serif;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:16px;"></div>
+    <div id="modal-body" style="font-size:14px;color:#a0b0c8;line-height:1.9;margin-bottom:28px;"></div>
+    <a id="modal-link" href="#" target="_blank" style="display:inline-block;background:var(--accent);color:#000;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;padding:12px 28px;border-radius:4px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background='var(--accent)'">Visit Official Source ↗</a>
+  </div>
+</div>
+
+<script>
+const articles = [
+  {
+    tag: 'Earthquake', tagClass: 'critical-tag', icon: '🌍',
+    title: 'Understanding Seismic Activity in the Himalayan Belt',
+    source: 'National Centre for Seismology, India',
+    body: `The Himalayan region is one of the world's most seismically active zones, formed by the ongoing collision of the Indian and Eurasian tectonic plates. This convergence releases enormous energy, making states like Uttarakhand, Himachal Pradesh, Sikkim, and the entire Northeast highly vulnerable to major earthquakes.\n\nIndia is divided into five seismic zones (I–V), with Zone V being the highest risk. The entire Northeastern region, parts of Jammu & Kashmir, Uttarakhand, and the Andaman & Nicobar Islands fall under Zone V.\n\nThe 2011 Sikkim earthquake (magnitude 6.9) and the 1991 Uttarkashi earthquake (magnitude 6.8) are stark reminders of the region's vulnerability. Experts warn that a major Himalayan earthquake could affect tens of millions of people across densely populated plains.\n\nEarly warning systems, strict building codes, and community preparedness programmes are critical to reducing casualties in future events.`,
+    url: 'https://seismo.gov.in'
+  },
+  {
+    tag: 'Cyclone', tagClass: 'warning-tag', icon: '🌀',
+    title: 'Bay of Bengal Cyclone Patterns & Coastal Impact',
+    source: 'India Meteorological Department (IMD)',
+    body: `The Bay of Bengal is one of the most cyclone-prone ocean basins in the world, accounting for nearly 7% of global tropical cyclones. India's eastern coastline — spanning Odisha, Andhra Pradesh, Tamil Nadu, and West Bengal — bears the brunt of these storms each year.\n\nCyclone seasons typically peak between April–June and October–December. Landmark storms like Cyclone Fani (2019), which made landfall in Odisha with wind speeds of 175 km/h, and Cyclone Amphan (2020) caused devastating losses but also demonstrated India's improving early warning and mass evacuation capabilities.\n\nIMD now issues 5-day cyclone track forecasts with high accuracy. The government's pre-emptive evacuation of over 1.2 million people ahead of Fani was widely credited with preventing mass casualties.\n\nCoastal zone management, mangrove restoration, and real-time storm surge modelling remain key pillars of India's cyclone resilience strategy.`,
+    url: 'https://mausam.imd.gov.in'
+  },
+  {
+    tag: 'Flood', tagClass: 'danger-tag', icon: '🌊',
+    title: 'Monsoon Flooding: Assam & Bihar Crisis Preparedness',
+    source: 'National Disaster Management Authority (NDMA)',
+    body: `India experiences some of the world's most severe monsoon flooding, with Assam and Bihar being the worst-affected states year after year. The Brahmaputra and Barak river systems in Assam overflow annually, displacing millions and submerging vast areas of agricultural land.\n\nIn 2022 alone, floods in Assam affected over 5.4 million people across 32 districts. Bihar's flood plains, fed by rivers originating in Nepal, regularly inundate northern districts including Darbhanga, Muzaffarpur, and Sitamarhi.\n\nNDMA's flood management strategy now integrates satellite-based inundation mapping, community flood shelters, and early warning dissemination through mobile alerts. AI-driven river flow prediction models have improved advance warning from 24 hours to up to 72 hours in select river basins.\n\nLong-term solutions include embankment strengthening, watershed management, and transboundary river agreements with Nepal and Bangladesh.`,
+    url: 'https://ndma.gov.in'
+  },
+  {
+    tag: 'Wildfire', tagClass: 'warning-tag', icon: '🔥',
+    title: 'Forest Fire Risk in Uttarakhand: Causes & Response',
+    source: 'Forest Survey of India (FSI)',
+    body: `Forest fires have become an increasingly severe seasonal crisis in Uttarakhand, with the state recording thousands of fire incidents annually between February and June. The dry chir pine forests, combined with rising temperatures and reduced winter rainfall, create ideal conditions for rapid fire spread.\n\nIn 2021, Uttarakhand witnessed over 1,000 fire incidents that charred more than 1,200 hectares of forest cover. The fires destroy biodiversity, trigger soil erosion, and degrade critical watershed zones that supply water to millions downstream.\n\nFSI uses satellite-based MODIS and VIIRS sensors for near-real-time fire hotspot detection. ISRO's RESOURCESAT data helps map burn severity and plan post-fire restoration.\n\nGround-level solutions include deployment of fire watchers, controlled burning in firebreaks, community-based forest management, and mobile rapid-response teams stationed across vulnerable districts.`,
+    url: 'https://fsi.nic.in'
+  },
+  {
+    tag: 'Tsunami', tagClass: 'critical-tag', icon: '🌐',
+    title: 'Indian Ocean Tsunami Warning Systems: Current Status',
+    source: 'INCOIS — Indian National Centre for Ocean Information Services',
+    body: `The 2004 Indian Ocean Tsunami, which claimed over 230,000 lives across 14 countries, was a watershed moment for disaster preparedness in the region. India responded by establishing INCOIS in Hyderabad as the national hub for ocean-based hazard monitoring and tsunami early warning.\n\nINCOIS operates the Indian Tsunami Early Warning Centre (ITEWC), which uses a network of seismic stations, Deep-ocean Assessment and Reporting of Tsunamis (DART) buoys, tide gauges, and GPS sensors to detect and evaluate potential tsunami threats.\n\nThe system is capable of issuing an initial warning within 10–15 minutes of a seismic event. Since becoming operational in 2007, ITEWC has issued advisories for several tsunamigenic earthquakes in the Indian Ocean region, allowing coastal authorities to take precautionary measures.\n\nOngoing upgrades include expanded DART buoy networks, improved modelling software, and real-time integration with state disaster management authorities for last-mile alert delivery.`,
+    url: 'https://incois.gov.in'
+  },
+  {
+    tag: 'Heatwave', tagClass: 'green-tag', icon: '☀️',
+    title: 'Heatwave Preparedness: Rajasthan & Vidarbha Region',
+    source: 'Ministry of Health & Family Welfare (MoHFW)',
+    body: `India is one of the world's most heat-stressed nations. Heatwaves — defined as temperatures 4.5°C or more above normal for at least two consecutive days — have grown in frequency, duration, and intensity. Rajasthan, Vidarbha (Maharashtra), Telangana, and Andhra Pradesh are the most affected regions.\n\nBetween 2010 and 2020, India recorded over 6,000 official heat-related deaths, though the actual toll is believed to be far higher. The 2015 heatwave killed over 2,500 people across Andhra Pradesh and Telangana in one of India's deadliest heat events.\n\nAhmedabad pioneered India's first Heat Action Plan in 2013, which has since been cited as a global model. Key components include colour-coded heat alerts, cooling centres in public buildings, adjusted working hours for outdoor labourers, and targeted outreach to elderly and homeless populations.\n\nIMD now issues seasonal heatwave outlooks and district-level alerts. NDMA's national guidelines recommend that all states in the heat-prone zone maintain heat action plans with clearly defined roles for health, water, and urban bodies.`,
+    url: 'https://mohfw.gov.in'
+  }
+];
+
+function openArticle(i) {
+  const a = articles[i];
+  document.getElementById('modal-tag').className = 'article-tag ' + a.tagClass;
+  document.getElementById('modal-tag').textContent = a.tag;
+  document.getElementById('modal-icon').textContent = a.icon;
+  document.getElementById('modal-title').textContent = a.title;
+  document.getElementById('modal-source').textContent = '▸ Source: ' + a.source;
+  document.getElementById('modal-body').innerHTML = a.body.split('\n\n').map(p => `<p style="margin-bottom:16px;">${p}</p>`).join('');
+  document.getElementById('modal-link').href = a.url;
+  const modal = document.getElementById('article-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('article-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.getElementById('article-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function toggleArticles(e) {
+  e.preventDefault();
+  const section = document.getElementById('articles-section');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) section.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Command Center — Disaster Response Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── CSS Variables ── */
+    :root {
+      --background: #0a0b0f;
+      --card: #111318;
+      --card-hover: #181c24;
+      --border: #1f2330;
+      --border-glow: rgba(255, 60, 60, 0.25);
+      --muted: #1e2230;
+      --muted-fg: #64748b;
+      --foreground: #e8eaf0;
+      --card-fg: #ccd0da;
+      --primary: #ff3c3c;
+      --primary-dim: rgba(255, 60, 60, 0.12);
+      --priority-low: #22c55e;
+      --priority-low-bg: rgba(34, 197, 94, 0.12);
+      --priority-mid: #f59e0b;
+      --priority-mid-bg: rgba(245, 158, 11, 0.12);
+      --priority-high: #ff3c3c;
+      --priority-high-bg: rgba(255, 60, 60, 0.12);
+      --status-pending: #f59e0b;
+      --status-assigned: #3b82f6;
+      --status-resolved: #22c55e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+    }
+
+    /* ── Animations ── */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.4); }
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--border-glow); }
+      50%       { box-shadow: 0 0 12px 2px var(--border-glow); }
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(17, 19, 24, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-inner {
+      max-width: 1152px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--primary-dim);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-icon svg { width: 18px; height: 18px; color: var(--primary); stroke: var(--primary); }
+    .brand-title { font-size: 16px; font-weight: 700; color: var(--foreground); }
+    .brand-sub { font-size: 11px; color: var(--muted-fg); margin-top: 1px; }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--primary-dim);
+      border-radius: 999px;
+      padding: 4px 12px;
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    .live-text { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: 0.05em; }
+
+    .btn-outline {
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--foreground);
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-outline:hover { background: var(--muted); border-color: var(--muted-fg); }
+    .btn-outline svg { width: 14px; height: 14px; stroke: currentColor; }
+
+    /* ── Main Layout ── */
+    .main { max-width: 1152px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+    .stat-card.highlight {
+      border-color: rgba(255,60,60,0.3);
+      animation: glow-pulse 2.5s ease-in-out infinite;
+    }
+    .stat-card-header { display: flex; align-items: center; gap: 8px; }
+    .stat-card-header svg { width: 15px; height: 15px; }
+    .stat-card.highlight .stat-card-header svg { stroke: var(--primary); }
+    .stat-card:not(.highlight) .stat-card-header svg { stroke: var(--muted-fg); }
+    .stat-label { font-size: 11px; color: var(--muted-fg); }
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .stat-card.highlight .stat-value { color: var(--primary); }
+    .stat-card:not(.highlight) .stat-value { color: var(--foreground); }
+
+    /* ── Two-Column Grid ── */
+    .content-grid { display: grid; gap: 24px; }
+    @media (min-width: 1024px) { .content-grid { grid-template-columns: 1fr 1fr 1fr; } }
+    .col-wide { grid-column: span 1; }
+    @media (min-width: 1024px) { .col-wide { grid-column: span 2; } }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--foreground);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* ── Request Cards ── */
+    .requests-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .req-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: background 0.15s, box-shadow 0.15s;
+      animation: slide-up 0.3s ease both;
+    }
+    .req-card:hover { background: var(--card-hover); }
+    .req-card.urgent {
+      border-color: rgba(255,60,60,0.3);
+      box-shadow: 0 0 0 0 var(--border-glow);
+      animation: slide-up 0.3s ease both, glow-pulse 2.5s ease-in-out infinite;
+    }
+    .req-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .req-left { display: flex; align-items: flex-start; gap: 12px; }
+    .req-emoji { font-size: 24px; margin-top: 2px; line-height: 1; }
+    .req-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .req-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted-fg);
+    }
+    .req-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--card-fg);
+      margin-top: 4px;
+    }
+    .req-msg { font-size: 11px; color: var(--muted-fg); margin-top: 4px; }
+    .req-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .req-tag {
+      background: var(--muted);
+      color: var(--muted-fg);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .req-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    .req-time { font-size: 11px; color: var(--muted-fg); }
+    .btn-dispatch {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      height: 28px;
+    }
+    .btn-dispatch:hover { opacity: 0.85; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.03em;
+    }
+    .badge-high   { background: var(--priority-high-bg); color: var(--priority-high); }
+    .badge-medium { background: var(--priority-mid-bg);  color: var(--priority-mid); }
+    .badge-low    { background: var(--priority-low-bg);  color: var(--priority-low); }
+    .badge-pending  { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .badge-assigned { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .badge-resolved { background: rgba(34,197,94,0.12);  color: #22c55e; }
+
+    /* ── Resources Panel ── */
+    .resources-list { display: flex; flex-direction: column; gap: 8px; }
+    .res-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .res-icon {
+      width: 34px; height: 34px;
+      background: var(--muted);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .res-icon svg { width: 15px; height: 15px; stroke: var(--muted-fg); }
+    .res-name { font-size: 13px; font-weight: 600; color: var(--card-fg); }
+    .res-type { font-size: 11px; color: var(--muted-fg); margin-top: 2px; text-transform: capitalize; }
+    .res-status {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .res-available { background: var(--priority-low-bg); color: var(--priority-low); }
+    .res-assigned  { background: var(--muted); color: var(--muted-fg); }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">Command Center</div>
+        <div class="brand-sub">Disaster Response Dashboard</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        <span class="live-text">LIVE</span>
+      </div>
+      <button class="btn-outline" onclick="window.location='/'">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        SOS Page
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <!-- Content -->
+  <div class="content-grid">
+    <div class="col-wide">
+      <div class="section-title">Live Requests</div>
+      <div class="requests-list" id="requests-list"></div>
+    </div>
+    <div>
+      <div class="section-title">Resources</div>
+      <div class="resources-list" id="resources-list"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  /* ── Mock Data ── */
+  const DISASTER_ICONS = {
+    flood: '🌊', fire: '🔥', earthquake: '🏚️', cyclone: '🌀',
+    landslide: '⛰️', tsunami: '🌊', drought: '☀️', medical: '🚑'
+  };
+  const DISASTER_LABELS = {
+    flood: 'Flood', fire: 'Fire', earthquake: 'Earthquake', cyclone: 'Cyclone',
+    landslide: 'Landslide', tsunami: 'Tsunami', drought: 'Drought', medical: 'Medical Emergency'
+  };
+
+  
+
+  /* ── Resource Icons (SVG paths) ── */
+  const RESOURCE_ICONS = {
+    rescue_team: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>`,
+    ambulance: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/>
+      <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+    </svg>`,
+    shelter: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>`,
+    volunteer: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>`,
+  };
+
+  /* ── Helpers ── */
+  function timeAgo(date) {
+    const mins = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    return `${Math.floor(mins / 60)}h ago`;
+  }
+
+  function priorityClass(p) {
+    return { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }[p] || 'badge-low';
+  }
+  function statusClass(s) {
+    return { pending: 'badge-pending', assigned: 'badge-assigned', resolved: 'badge-resolved' }[s] || '';
+  }
+  function priorityLabel(p, score) {
+    return `${p.charAt(0).toUpperCase() + p.slice(1)} <span style="opacity:.6">${score}</span>`;
+  }
+
+  /* ── Render Stats ── */
+  const total    = mockRequests.length;
+  const high     = mockRequests.filter(r => r.priority === 'high').length;
+  const pending  = mockRequests.filter(r => r.status === 'pending').length;
+  const avail    = mockResources.filter(r => r.available).length;
+
+  const statsSVGs = {
+    alert: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    clock: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    users: `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  };
+
+  const statsData = [
+    { icon: statsSVGs.alert, label: 'Total Requests', value: total, highlight: false },
+    { icon: statsSVGs.alert, label: 'High Priority',  value: high,  highlight: true },
+    { icon: statsSVGs.clock, label: 'Pending',        value: pending, highlight: false },
+    { icon: statsSVGs.users, label: 'Resources Available', value: avail, highlight: false },
+  ];
+
+  const statsGrid = document.getElementById('stats-grid');
+  statsData.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'stat-card' + (s.highlight ? ' highlight' : '');
+    div.innerHTML = `
+      <div class="stat-card-header">${s.icon}<span class="stat-label">${s.label}</span></div>
+      <div class="stat-value">${s.value}</div>
+    `;
+    statsGrid.appendChild(div);
+  });
+
+  /* ── Render Requests ── */
+  const reqList = document.getElementById('requests-list');
+  
+
+  /* ── Render Resources ── */
+  const resList = document.getElementById('resources-list');
+  mockResources.forEach(res => {
+    const div = document.createElement('div');
+    div.className = 'res-card';
+    div.innerHTML = `
+      <div class="res-icon">${RESOURCE_ICONS[res.type]}</div>
+      <div>
+        <div class="res-name">${res.name}</div>
+        <div class="res-type">${res.type.replace('_', ' ')}</div>
+      </div>
+      <span class="res-status ${res.available ? 'res-available' : 'res-assigned'}">
+        ${res.available ? 'Available' : 'Assigned'}
+      </span>
+    `;
+    resList.appendChild(div);
+  });
+
+  /* ── Dispatch action ── */
+  function dispatch(id, btn) {
+    btn.textContent = '✓ Sent';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    const card = btn.closest('.req-card');
+    card.classList.remove('urgent');
+    const statusBadge = card.querySelector('.badge-pending');
+    if (statusBadge) {
+      statusBadge.className = 'badge badge-assigned';
+      statusBadge.textContent = 'Assigned';
+    }
+    setTimeout(() => btn.remove(), 800);
+  }
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, collection, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyCIhvlBKv2sdpKEX0L4qfSk1ZpUW6HaV7g",
+  authDomain: "adois-f1808.firebaseapp.com",
+  projectId: "adois-f1808",
+  storageBucket: "adois-f1808.firebasestorage.app",
+  messagingSenderId: "73256934685",
+  appId: "1:73256934685:web:1fda0144fbd3fdc84c55f4"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadRealData() {
+  const snapshot = await getDocs(collection(db, "disasterReports"));
+
+  const reqList = document.getElementById('requests-list');
+  reqList.innerHTML = "";
+
+  snapshot.forEach((doc, i) => {
+    const d = doc.data();
+
+    const div = document.createElement('div');
+    div.className = 'req-card';
+    div.style.animationDelay = `${i * 60}ms`;
+
+    div.innerHTML = `
+      <div class="req-row">
+        <div class="req-left">
+          <span class="req-emoji"></span>
+          <div>
+            <div class="req-meta">
+              <span class="req-id">${doc.id}</span>
+              <span class="badge badge-${(d.urgency || "low").toLowerCase()}">
+                ${d.urgency}
+              </span>
+              <span class="badge badge-pending">Pending</span>
+            </div>
+            <div class="req-title">${d.type} — ${d.location}</div>
+            <div class="req-msg">${d.description}</div>
+          </div>
+        </div>
+        <div class="req-right">
+          <span class="req-time">Just now</span>
+        </div>
+      </div>
+    `;
+
+    reqList.appendChild(div);
+  });
+}
+
+loadRealData();
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Report Disaster - ADOIS</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <style>
+    #disasterMap {
+      height: 400px;
+      width: 100%;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .coordinates-display {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .coord-input {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>ADOIS - User Portal</h2>
+  <div>
+    
+    <a href="adois (3).html">Home</a>
+    <a href="livemap.html">Live Map</a>
+    <a href="firstaid.html">First Aid</a>
+    <a href="helpline.html">Helplines</a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <h1>Report a Disaster</h1>
+    <p>Submit real-time disaster information to help coordinate emergency response.</p>
+  </div>
+
+  <form id="disasterForm" class="glass-form">
+
+    <!-- Location -->
+    <div class="form-group">
+      <label>Location</label>
+      <div class="location-row">
+        <input type="text" id="location" placeholder="Enter location or detect automatically">
+        <button type="button" id="detectBtn">📍</button>
+      </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="form-group">
+      <label>Location Map</label>
+      <div id="disasterMap"></div>
+      <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Click on the map to set the disaster location</p>
+    </div>
+
+    <!-- Coordinates -->
+    <div class="form-group">
+      <label>Coordinates</label>
+      <div class="coordinates-display">
+        <div class="coord-input">
+          <input type="number" id="latitude" placeholder="Latitude" step="0.0001" readonly>
+        </div>
+        <div class="coord-input">
+          <input type="number" id="longitude" placeholder="Longitude" step="0.0001" readonly>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disaster Type -->
+    <div class="form-group">
+      <label>Disaster Type</label>
+      <select id="type">
+        <option value="">Select disaster type</option>
+        <option>Flood</option>
+        <option>Fire</option>
+        <option>Earthquake</option>
+        <option>Landslide</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="description" placeholder="Describe the situation..."></textarea>
+    </div>
+
+    <!-- People + Urgency -->
+    <div class="grid-two">
+      <div class="form-group">
+        <label>People Affected</label>
+        <input type="number" id="people" min="0">
+      </div>
+
+      <div class="form-group">
+        <label>Urgency Level</label>
+        <select id="urgency">
+          <option value="">Select urgency</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn">
+      Submit Disaster Report
+    </button>
+
+  </form>
+
+</div>
+
+
+
+<script src="script.js"></script>
+<!-- Leaflet Map JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyCIhvlBKv2sdpKEX0L4qfSk1ZpUW6HaV7g",
+  authDomain: "adois-f1808.firebaseapp.com",
+  projectId: "adois-f1808",
+  storageBucket: "adois-f1808.firebasestorage.app",
+  messagingSenderId: "73256934685",
+  appId: "1:73256934685:web:1fda0144fbd3fdc84c55f4"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+  window.addDoc = addDoc;
+  window.collection = collection;
+</script>
+
+</body>
+</body>
+</html>

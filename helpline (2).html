@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADOIS Helplines</title>
+
+<style>
+
+/* GLOBAL */
+body{
+  margin:0;
+  font-family: "Inter", sans-serif;
+  background: radial-gradient(circle at top,#0b1220,#03060d);
+  color:#e6edf3;
+}
+
+/* NAVBAR */
+nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 60px;
+  background:rgba(22,27,34,0.7);
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+nav h2{
+  color:#58a6ff;
+  letter-spacing:1px;
+}
+
+nav a{
+  color:#c9d1d9;
+  text-decoration:none;
+  margin-left:25px;
+  font-size:15px;
+}
+nav a:hover{color:#58a6ff}
+
+/* HEADER */
+.header{
+  text-align:center;
+  padding:70px 20px;
+}
+
+.header h1{
+  font-size:40px;
+  background:linear-gradient(90deg,#58a6ff,#3fb950);
+  background-clip:text;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.header p{
+  color:#8b949e;
+  margin-top:10px;
+}
+
+/* SEARCH */
+.search-box{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+.search-box input{
+  width:320px;
+  padding:12px 18px;
+  border-radius:30px;
+  border:none;
+  outline:none;
+  background:#161b22;
+  color:white;
+  font-size:15px;
+}
+
+/* GRID */
+.container{
+  padding:40px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:25px;
+}
+
+/* CARD */
+.card{
+  background:rgba(22,27,34,0.7);
+  border-radius:18px;
+  padding:25px;
+  text-decoration:none;
+  color:white;
+  backdrop-filter: blur(12px);
+  border:1px solid rgba(255,255,255,0.05);
+  transition:.3s;
+  position:relative;
+  overflow:hidden;
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  width:120%;
+  height:120%;
+  background:linear-gradient(120deg,transparent,#58a6ff33,transparent);
+  top:-10%;
+  left:-10%;
+  transform:rotate(25deg);
+  opacity:0;
+  transition:.5s;
+}
+
+.card:hover::before{
+  opacity:1;
+}
+
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 0 25px rgba(88,166,255,0.15);
+}
+
+.title{
+  font-size:20px;
+  font-weight:600;
+}
+
+.desc{
+  font-size:14px;
+  color:#9da7b3;
+  margin:8px 0 18px;
+}
+
+.number{
+  font-size:28px;
+  font-weight:bold;
+  color:#58a6ff;
+}
+
+/* TAG */
+.tag{
+  position:absolute;
+  top:15px;
+  right:15px;
+  font-size:11px;
+  padding:4px 10px;
+  border-radius:20px;
+  background:#0d2b3a;
+  color:#58a6ff;
+}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  padding:30px;
+  color:#8b949e;
+  margin-top:40px;
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h2>ADOIS</h2>
+  <div>
+    <a href="user.html">Home</a>
+    <a href="#">LiveMap</a>
+    <a href="firstaid.html">First Aid</a>
+  </div>
+</nav>
+
+<section class="header">
+  <h1>Emergency Helplines</h1>
+  <p>Instant access to emergency services</p>
+</section>
+
+<div class="search-box">
+  <input type="text" id="search" placeholder="Search service...">
+</div>
+
+<div class="container" id="list">
+
+<a href="tel:112" class="card">
+<span class="tag">Emergency</span>
+<div class="title">National Emergency</div>
+<div class="desc">All-in-one emergency support</div>
+<div class="number">112</div>
+</a>
+
+<a href="tel:100" class="card">
+<span class="tag">Security</span>
+<div class="title">Police</div>
+<div class="desc">Law enforcement assistance</div>
+<div class="number">100</div>
+</a>
+
+<a href="tel:101" class="card">
+<span class="tag">Rescue</span>
+<div class="title">Fire Service</div>
+<div class="desc">Fire & rescue response</div>
+<div class="number">101</div>
+</a>
+
+<a href="tel:108" class="card">
+<span class="tag">Medical</span>
+<div class="title">Ambulance</div>
+<div class="desc">Immediate medical help</div>
+<div class="number">108</div>
+</a>
+
+<a href="tel:1091" class="card">
+<span class="tag">Safety</span>
+<div class="title">Women Helpline</div>
+<div class="desc">Women protection support</div>
+<div class="number">1091</div>
+</a>
+
+<a href="tel:1098" class="card">
+<span class="tag">Child</span>
+<div class="title">Child Helpline</div>
+<div class="desc">Child emergency care</div>
+<div class="number">1098</div>
+</a>
+
+<a href="tel:1078" class="card">
+<span class="tag">Disaster</span>
+<div class="title">Disaster Management</div>
+<div class="desc">Disaster assistance center</div>
+<div class="number">1078</div>
+</a>
+
+<a href="tel:104" class="card">
+<span class="tag">Health</span>
+<div class="title">Health Helpline</div>
+<div class="desc">Medical guidance service</div>
+<div class="number">104</div>
+</a>
+
+</div>
+
+<footer>
+ADOIS Emergency Support Interface © 2026
+</footer>
+
+<script>
+const search = document.getElementById("search");
+search.addEventListener("keyup", ()=>{
+  let filter = search.value.toLowerCase();
+  document.querySelectorAll(".card").forEach(card=>{
+    card.style.display =
+      card.innerText.toLowerCase().includes(filter)
+      ? "block"
+      : "none";
+  });
+});
+</script>
+
+</body>
+</html>

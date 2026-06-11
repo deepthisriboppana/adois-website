@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADOIS — Admin Command Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080f;
+    --surface: rgba(8,16,32,0.85);
+    --border: rgba(0,180,255,0.18);
+    --accent: #00b4ff;
+    --accent2: #ff6a00;
+    --amber: #ffb300;
+    --green: #00e5a0;
+    --text: #e2eaf5;
+    --muted: #5a7090;
+    --danger: #ff3d3d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,180,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,180,255,0.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridScroll 20s linear infinite;
+  }
+
+  @keyframes gridScroll {
+    from { background-position: 0 0; }
+    to   { background-position: 60px 60px; }
+  }
+
+  .bg-glow1 {
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,106,0,0.15) 0%, transparent 70%);
+    top: -200px; right: -200px;
+    animation: pulse1 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse1 { from { opacity: 0.5; transform: scale(1); } to { opacity: 1; transform: scale(1.1); } }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,106,0,0.4), transparent);
+    animation: scan 8s linear infinite;
+  }
+  @keyframes scan { from { top: -2px; } to { top: 100%; } }
+
+  nav {
+    position: relative; z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,8,15,0.7);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 42px; height: 42px;
+    border: 2px solid var(--accent2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--accent2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,106,0,0.2), transparent);
+  }
+
+  .logo-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.15em;
+    color: var(--accent2);
+  }
+
+  .logo-sub {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: -2px;
+  }
+
+  .back-link {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .back-link:hover { color: var(--accent2); }
+
+  .container {
+    position: relative;
+    z-index: 5;
+    min-height: calc(100vh - 82px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,106,0,0.3);
+    border-radius: 12px;
+    padding: 48px;
+    backdrop-filter: blur(16px);
+    max-width: 480px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent2), transparent);
+  }
+
+  .card-corner {
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 40px 40px 0;
+    border-color: transparent rgba(255,106,0,0.3) transparent transparent;
+  }
+
+  .card-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .card-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    background: rgba(255,106,0,0.1);
+    border: 2px solid rgba(255,106,0,0.35);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .alert-box {
+    background: rgba(255,106,0,0.08);
+    border: 1px solid rgba(255,106,0,0.25);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert-box .icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .alert-box .text {
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+  }
+
+  .field {
+    margin-bottom: 24px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .field label .required {
+    color: var(--danger);
+    margin-left: 4px;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .field input:focus {
+    border-color: rgba(255,106,0,0.5);
+    background: rgba(0,0,0,0.6);
+  }
+
+  .field input::placeholder {
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .checkbox-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent2);
+  }
+
+  .checkbox-field label {
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .forgot-link {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .forgot-link:hover {
+    color: var(--accent2);
+  }
+
+  .btn-login {
+    width: 100%;
+    background: var(--accent2);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-login::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-login:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-login:hover {
+    background: #ffaa55;
+    box-shadow: 0 0 30px rgba(255,106,0,0.5);
+    transform: translateY(-2px);
+  }
+
+  .btn-login span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .divider-text {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .footer-text {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    line-height: 1.6;
+  }
+
+  .security-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .security-badge .badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--green);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .security-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-grid"></div>
+  <div class="bg-glow1"></div>
+  <div class="scan-line"></div>
+</div>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">⬡</div>
+    <div>
+      <div class="logo-text">ADOIS</div>
+      <div class="logo-sub">Admin Command Portal</div>
+    </div>
+  </div>
+  <a href="adois_(3).html" class="back-link">
+    ← Back to Home
+  </a>
+</nav>
+
+<div class="container">
+  <div class="login-card">
+    <div class="card-corner"></div>
+
+    <div class="card-header">
+      <div class="card-icon">🛡️</div>
+      <h1 class="card-title">Admin Access</h1>
+      <p class="card-subtitle">Command & Control Portal</p>
+    </div>
+
+    <div class="alert-box">
+      <div class="icon">⚠️</div>
+      <div class="text">
+        Restricted access. All login attempts are logged and monitored. Unauthorized access will be prosecuted.
+      </div>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label for="email">
+          Email Address
+          <span class="required">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="admin@adois.gov.in"
+          required
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="field">
+        <label for="password">
+          Password
+          <span class="required">*</span>
+        </label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter your secure password"
+          required
+          autocomplete="current-password"
+        >
+      </div>
+
+      <div class="field-row">
+        <div class="checkbox-field">
+          <input type="checkbox" id="remember" name="remember">
+          <label for="remember">Remember this device</label>
+        </div>
+        <a href="#" class="forgot-link">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <span>🔓 Access Command Portal</span>
+      </button>
+    </form>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">Secure Connection</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="footer-text">
+      By logging in, you acknowledge compliance with the IT Act 2000 and ADOIS security protocols.
+    </div>
+
+    <div class="security-badge">
+      <div class="badge">
+        <div class="dot"></div>
+        256-bit AES Encryption
+      </div>
+      <div class="badge">
+        <div class="dot"></div>
+        2FA Enabled
+      </div>
+    </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } 
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs } 
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyCIhvlBKv2sdpKEX0L4qfSk1ZpUW6HaV7g",
+  authDomain: "adois-f1808.firebaseapp.com",
+  projectId: "adois-f1808",
+  storageBucket: "adois-f1808.firebasestorage.app",
+  messagingSenderId: "73256934685",
+  appId: "1:73256934685:web:1fda0144fbd3fdc84c55f4"
+};
+
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window.handleLogin = async function(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      // 🔐 Step 1: Login
+      await signInWithEmailAndPassword(auth, email, password);
+
+      // 🔍 Step 2: Check if admin
+      const snapshot = await getDocs(collection(db, "admins"));
+
+      let isAdmin = false;
+
+      snapshot.forEach(doc => {
+        if (doc.data().email === email) {
+          isAdmin = true;
+        }
+      });
+
+      // 🚫 Step 3: Block if not admin
+      if (!isAdmin) {
+        alert("❌ Access denied. Not an admin.");
+        return;
+      }
+
+      // ✅ Step 4: Success
+      alert("✅ Admin login successful!");
+      window.location.href = "admin_dashboard.html";
+
+    } catch (error) {
+      console.log(error.code);
+      console.log(error.message);
+      alert(error.code);
+    }
+  };
+</script>
+</body>
+</html>

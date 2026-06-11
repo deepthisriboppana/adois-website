@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ADOIS Telangana Live Map</title>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b1220;
+  color: white;
+}
+
+header {
+  padding: 15px;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+#map {
+  height: calc(100vh - 60px);
+  width: 100%;
+}
+
+.legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.7);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+ADOIS — Telangana Disaster Monitoring Map
+</header>
+
+<div id="map"></div>
+
+<div class="legend">
+<b>Legend</b><br>
+🔵 Your Location<br>
+🔴 Disaster Incident<br>
+🟢 Shelter
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+// Telangana center
+var telanganaCenter = [17.9784, 79.5941];
+
+// Telangana bounds (STRICT)
+var telanganaBounds = [
+  [15.8, 77.0],  // Southwest
+  [19.9, 81.1]   // Northeast
+];
+
+// Initialize map locked to Telangana
+var map = L.map('map', {
+  center: telanganaCenter,
+  zoom: 7,
+  minZoom: 7,
+  maxZoom: 18,
+  maxBounds: telanganaBounds,
+  maxBoundsViscosity: 1.0
+});
+
+// Add tile layer
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+ attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+
+// ==========================
+// User location restricted
+// ==========================
+
+if (navigator.geolocation) {
+
+ navigator.geolocation.getCurrentPosition(function(position) {
+
+   var lat = position.coords.latitude;
+   var lng = position.coords.longitude;
+
+   // Check if inside Telangana
+   if(lat >= 15.8 && lat <= 19.9 &&
+      lng >= 77.0 && lng <= 81.1) {
+
+     map.setView([lat, lng], 13);
+
+     L.marker([lat, lng])
+      .addTo(map)
+      .bindPopup("🔵 Your Location");
+
+   }
+   else {
+
+     alert("You are outside Telangana region");
+
+   }
+
+ });
+
+}
+
+
+// ==========================
+// Disaster icons
+// ==========================
+
+var disasterIcon = L.icon({
+ iconUrl:
+ "https://cdn-icons-png.flaticon.com/512/565/565547.png",
+ iconSize: [30, 30]
+});
+
+
+// Hyderabad flood example
+L.marker([17.3850, 78.4867], { icon: disasterIcon })
+ .addTo(map)
+ .bindPopup("🔴 Flood Incident<br>Hyderabad");
+
+
+// Warangal fire example
+L.marker([17.9689, 79.5941], { icon: disasterIcon })
+ .addTo(map)
+ .bindPopup("🔴 Fire Incident<br>Warangal");
+
+
+// ==========================
+// Shelter icons
+// ==========================
+
+var shelterIcon = L.icon({
+ iconUrl:
+ "https://cdn-icons-png.flaticon.com/512/619/619153.png",
+ iconSize: [30, 30]
+});
+
+
+// Shelter example
+L.marker([17.4000, 78.4900], { icon: shelterIcon })
+ .addTo(map)
+ .bindPopup("🟢 Shelter - Hyderabad");
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Aid - ADOIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --red: #ff2d2d;
+  --red-dim: rgba(100, 9, 9, 0.15);
+  --green: #00e676;
+  --green-dim: rgba(0,230,118,0.12);
+  --bg: #060c18;
+  --panel: #08111f;
+  --panel2: #0d1b2e;
+  --border: rgba(255,255,255,0.06);
+  --text: #c9d8e8;
+  --mono: 'Share Tech Mono', monospace;
+  --sans: 'Barlow Condensed', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCANLINES OVERLAY ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(190, 43, 43, 0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 50px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar h2 {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.navbar a {
+  color: #64adf1;
+  text-decoration: none;
+  margin-left: 30px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: color .2s;
+}
+.navbar a:hover { color: #fff; }
+
+/* ── PULSE LINE SVG ── */
+.pulse-bar {
+  width: 100%;
+  height: 60px;
+  overflow: hidden;
+  position: relative;
+}
+.pulse-bar svg {
+  width: 200%;
+  height: 100%;
+  animation: scrollPulse 4s linear infinite;
+}
+@keyframes scrollPulse {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  text-align: center;
+  padding: 50px 20px 20px;
+  position: relative;
+}
+
+.page-header .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.page-header h1 {
+  font-family: var(--sans);
+  font-size: clamp(48px, 8vw, 90px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1;
+}
+
+.page-header h1 span {
+  color: var(--red);
+  -webkit-text-stroke: 0px;
+}
+
+.page-header p {
+  margin-top: 12px;
+  font-size: 16px;
+  color: #52a3ea;
+  letter-spacing: 1px;
+  font-weight: 300;
+}
+
+/* ── GRID ── */
+.grid-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 30px 120px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* ── CARD ── */
+.card {
+  perspective: 1000px;
+  height: 260px;
+  cursor: pointer;
+}
+
+.card-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover .card-inner,
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 14px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* FRONT */
+.card-front {
+  background: var(--panel2);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* giant ghost watermark */
+.card-front .watermark {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  font-family: Poppins, sans-serif;
+  font-size: 90px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: rgba(247, 53, 53, 0);
+  letter-spacing: -4px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* CSS red cross top-left */
+.card-front .cross {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  width: 28px;
+  height: 28px;
+}
+.card-front .cross::before,
+.card-front .cross::after {
+  content: '';
+  position: absolute;
+  background: var(--red);
+  border-radius: 2px;
+}
+.card-front .cross::before {
+  width: 10px; height: 28px;
+  left: 9px; top: 0;
+}
+.card-front .cross::after {
+  width: 28px; height: 10px;
+  left: 0; top: 9px;
+}
+
+/* card index top-right */
+.card-front .card-num {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #519bdc;
+  letter-spacing: 2px;
+}
+
+.card-front .category {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.card-front h3 {
+  font-size: 44px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  color: #fff;
+  line-height: 0.95;
+  margin-bottom: 18px;
+}
+
+.card-front .bottom-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 12px;
+}
+
+.card-front .flip-hint {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #76b6ed;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: color .2s;
+}
+.card:hover .flip-hint { color: #6a90b0; }
+
+.card-front .mini-pulse {
+  opacity: 0.25;
+  transition: opacity .2s;
+}
+.card:hover .mini-pulse { opacity: 0.65; }
+
+/* BACK */
+.card-back {
+  background: #050d1a;
+  transform: rotateY(180deg);
+  border-color: rgba(0,230,118,0.15);
+}
+
+.card-back::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green);
+  border-radius: 14px 14px 0 0;
+  opacity: 0.7;
+}
+
+.card-back .back-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.card-back ol {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-back ol li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #cde0f0;
+  line-height: 1.3;
+}
+
+.card-back ol li .num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  min-width: 18px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* ── SOS BUTTON ── */
+.sos-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  background: var(--red);
+  color: white;
+  border: none;
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(255,45,45,0.5);
+  animation: sosPulse 2s ease-out infinite;
+  z-index: 200;
+}
+@keyframes sosPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,45,45,0.55); }
+  70%  { box-shadow: 0 0 0 20px rgba(255,45,45,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,45,45,0); }
+}
+
+/* ── HOVER GLOW ON CARD ── */
+.card:hover .card-front {
+  border-color: rgba(255,45,45,0.25);
+  box-shadow: 0 0 30px rgba(255,45,45,0.06);
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>ADOIS</h2>
+  <div>
+    <a href="user.html">Home</a>
+    <a href="#">Live Map</a>
+    <a href="helpline.html">Helplines</a>
+  </div>
+</nav>
+
+<!-- Pulse line -->
+<div class="pulse-bar">
+  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <polyline
+      points="0,30 100,30 120,30 130,8 140,52 155,8 165,52 175,30 200,30
+              300,30 320,30 330,8 340,52 355,8 365,52 375,30 400,30
+              500,30 520,30 530,8 540,52 555,8 565,52 575,30 600,30
+              700,30 720,30 730,8 740,52 755,8 765,52 775,30 800,30
+              900,30 920,30 930,8 940,52 955,8 965,52 975,30 1000,30
+              1100,30 1120,30 1130,8 1140,52 1155,8 1165,52 1175,30 1200,30"
+      fill="none" stroke="rgba(255,45,45,0.35)" stroke-width="1.5"
+    />
+  </svg>
+</div>
+
+<div class="page-header">
+  <div class="label">Emergency Reference</div>
+  <h1>First <span>Aid</span></h1>
+  <p>Hover a card to reveal the procedure</p>
+</div>
+
+<div class="grid-wrapper">
+
+  <!-- CPR -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">CPR</div>
+        <div class="cross"></div>
+        <div class="card-num">01 / 10</div>
+        <div class="category">Cardiac</div>
+        <h3>CPR</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">CPR Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Check breathing</li>
+          <li><span class="num">02</span>Call emergency</li>
+          <li><span class="num">03</span>Push chest fast</li>
+          <li><span class="num">04</span>30 compressions + 2 breaths</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Burns -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Burns</div>
+        <div class="cross"></div>
+        <div class="card-num">02 / 10</div>
+        <div class="category">Thermal</div>
+        <h3>Burns</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Burns Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Cool water 10 minutes</li>
+          <li><span class="num">02</span>Remove tight items</li>
+          <li><span class="num">03</span>Cover cloth</li>
+          <li><span class="num">04</span>No ice</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fracture -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Fracture</div>
+        <div class="cross"></div>
+        <div class="card-num">03 / 10</div>
+        <div class="category">Trauma</div>
+        <h3>Fracture</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Fracture Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Keep still</li>
+          <li><span class="num">02</span>Immobilize limb</li>
+          <li><span class="num">03</span>Apply ice</li>
+          <li><span class="num">04</span>Doctor visit</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unconscious -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Uncon</div>
+        <div class="cross"></div>
+        <div class="card-num">04 / 10</div>
+        <div class="category">Neurological</div>
+        <h3>Unconscious</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Unconscious Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Check breathing</li>
+          <li><span class="num">02</span>Recovery position</li>
+          <li><span class="num">03</span>If none → CPR</li>
+          <li><span class="num">04</span>Call emergency</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seizure -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Seizure</div>
+        <div class="cross"></div>
+        <div class="card-num">05 / 10</div>
+        <div class="category">Neurological</div>
+        <h3>Seizure</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Seizure Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Clear surroundings</li>
+          <li><span class="num">02</span>Do not restrain</li>
+          <li><span class="num">03</span>Turn sideways</li>
+          <li><span class="num">04</span>Call emergency</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shock -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Shock</div>
+        <div class="cross"></div>
+        <div class="card-num">06 / 10</div>
+        <div class="category">Circulatory</div>
+        <h3>Shock</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Shock Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Lay down</li>
+          <li><span class="num">02</span>Raise legs</li>
+          <li><span class="num">03</span>Keep warm</li>
+          <li><span class="num">04</span>Call ambulance</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stroke -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Stroke</div>
+        <div class="cross"></div>
+        <div class="card-num">07 / 10</div>
+        <div class="category">Neurological</div>
+        <h3>Stroke</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Stroke Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Face drooping?</li>
+          <li><span class="num">02</span>Arm weak?</li>
+          <li><span class="num">03</span>Speech slurred?</li>
+          <li><span class="num">04</span>Call emergency</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heart Attack -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Heart</div>
+        <div class="cross"></div>
+        <div class="card-num">08 / 10</div>
+        <div class="category">Cardiac</div>
+        <h3>Heart Attack</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Heart Attack Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Seat person</li>
+          <li><span class="num">02</span>Loosen clothes</li>
+          <li><span class="num">03</span>Stay calm</li>
+          <li><span class="num">04</span>Call ambulance</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Choking -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Choking</div>
+        <div class="cross"></div>
+        <div class="card-num">09 / 10</div>
+        <div class="category">Airway</div>
+        <h3>Choking</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Choking Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Ask if speaking</li>
+          <li><span class="num">02</span>Perform thrusts</li>
+          <li><span class="num">03</span>Repeat</li>
+          <li><span class="num">04</span>Emergency help</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panic Attack -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="card-front">
+        <div class="watermark">Panic</div>
+        <div class="cross"></div>
+        <div class="card-num">10 / 10</div>
+        <div class="category">Psychological</div>
+        <h3>Panic Attack</h3>
+        <div class="bottom-strip">
+          <span class="flip-hint">Flip for steps</span>
+          <svg class="mini-pulse" width="80" height="20" viewBox="0 0 80 20"><polyline points="0,10 15,10 20,3 25,17 30,3 35,17 40,10 55,10 60,3 65,17 70,10 80,10" fill="none" stroke="#ff2d2d" stroke-width="1.2"/></svg>
+        </div>
+      </div>
+      <div class="card-back">
+        <div class="back-title">Panic Attack Protocol</div>
+        <ol>
+          <li><span class="num">01</span>Stay calm</li>
+          <li><span class="num">02</span>Slow breathing</li>
+          <li><span class="num">03</span>Reassure</li>
+          <li><span class="num">04</span>Quiet place</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<button class="sos-btn">SOS</button>
+
+<script>
+// click-to-toggle for mobile
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', () => card.classList.toggle('flipped'));
+});
+</script>
+
+</body>
+</html>
